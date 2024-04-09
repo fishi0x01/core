@@ -13,7 +13,7 @@ import ollama
 from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL, MATCH_ALL
+from homeassistant.const import CONF_HEADERS, CONF_URL, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, TemplateError
 from homeassistant.helpers import (
@@ -43,6 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 
 __all__ = [
     "CONF_URL",
+    "CONF_HEADERS",
     "CONF_PROMPT",
     "CONF_MODEL",
     "CONF_MAX_HISTORY",
@@ -56,7 +57,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ollama from a config entry."""
     settings = {**entry.data, **entry.options}
-    client = ollama.AsyncClient(host=settings[CONF_URL])
+    client = ollama.AsyncClient(host=settings[CONF_URL], headers=settings[CONF_HEADERS])
     try:
         async with asyncio.timeout(DEFAULT_TIMEOUT):
             await client.list()

@@ -18,11 +18,12 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_HEADERS, CONF_URL
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    ObjectSelector,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -52,6 +53,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_URL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
+        vol.Optional(CONF_HEADERS): ObjectSelector(),
     }
 )
 
@@ -65,6 +67,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self.url: str | None = None
         self.model: str | None = None
+        self.headers: dict[str, str] = {}
         self.client: ollama.AsyncClient | None = None
         self.download_task: asyncio.Task | None = None
 
@@ -74,6 +77,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         user_input = user_input or {}
         self.url = user_input.get(CONF_URL, self.url)
+        self.headers = user_input.get(CONF_HEADERS, self.headers)
         self.model = user_input.get(CONF_MODEL, self.model)
 
         if self.url is None:
@@ -84,7 +88,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            self.client = ollama.AsyncClient(host=self.url)
+            self.client = ollama.AsyncClient(host=self.url, headers=self.headers)
             async with asyncio.timeout(DEFAULT_TIMEOUT):
                 response = await self.client.list()
 
